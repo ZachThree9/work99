@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#4f7cff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="上班鼓励器">
+<meta name="format-detection" content="telephone=no">
+<title>上班鼓励器</title>
+<style>
+*{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root{
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --line:#e9edf5;
+  --txt:#1e2637;
+  --sub:#828ea1;
+  --primary:#4f7cff;
+  --primary-soft:#eef3ff;
+  --green:#1fb573;
+  --green-soft:#e9f9f1;
+  --amber:#e8930f;
+  --amber-soft:#fff6e8;
+  --shadow:0 6px 20px rgba(31,41,55,.07);
+  --radius:16px;
+  --safe-t:env(safe-area-inset-top, 0px);
+  --safe-b:env(safe-area-inset-bottom, 0px);
+}
+html{ -webkit-text-size-adjust:100%; }
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:radial-gradient(700px 420px at 50% -8%, #ffffff 0%, var(--bg) 62%);
+  color:var(--txt);
+  min-height:100vh;
+  min-height:100dvh;
+  padding:calc(14px + var(--safe-t)) 14px calc(20px + var(--safe-b));
+  display:flex; justify-content:center;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:contain;
+}
+.wrap{ width:100%; max-width:480px; display:flex; flex-direction:column; gap:12px; }
+
+/* ---------- 顶部 ---------- */
+.head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:2px 2px 0; }
+.head .l h1{ font-size:19px; font-weight:800; letter-spacing:.5px; }
+.head .l h1 em{ font-style:normal; color:var(--primary); }
+.head .l .tip{ font-size:11px; color:var(--sub); margin-top:3px; letter-spacing:.2px; }
+.hbtns{ display:flex; gap:7px; flex:0 0 auto; }
+.iconbtn{
+  width:40px; height:40px; border-radius:13px; flex:0 0 auto;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--card); border:1px solid var(--line); color:var(--sub);
+  cursor:pointer; box-shadow:0 2px 8px rgba(31,41,55,.04);
+  transition:.16s; font-family:inherit; font-size:17px;
+}
+.iconbtn:active{ transform:scale(.94); background:var(--primary-soft); }
+.iconbtn.inst{ color:var(--primary); border-color:#d6e1ff; background:var(--primary-soft); }
+.iconbtn svg{ width:19px; height:19px; }
+
+/* ---------- 卡片 ---------- */
+.card{
+  background:var(--card); border:1px solid var(--line);
+  border-radius:var(--radius); box-shadow:var(--shadow);
+  padding:15px 16px;
+}
+.card-label{ font-size:11px; color:var(--sub); letter-spacing:.5px; font-weight:600; }
+
+/* ---------- 状态卡 ---------- */
+.status{ padding:15px 16px; }
+.status .r1{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.status .date{ font-size:13.5px; font-weight:700; }
+.status .week{ font-size:11.5px; color:var(--sub); margin-top:2px; }
+.status .clock{
+  font-size:31px; font-weight:800; letter-spacing:.5px;
+  font-variant-numeric:tabular-nums; line-height:1;
+  text-align:right;
+  background:linear-gradient(180deg,#2b3a55,#4a5f86);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.status .r2{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:13px; }
+.badge{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:12px; font-weight:700; padding:6px 13px; border-radius:999px; white-space:nowrap;
+}
+.badge::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+.badge.on{ color:var(--green); background:var(--green-soft); }
+.badge.lunch{ color:var(--amber); background:var(--amber-soft); }
+.badge.off{ color:var(--sub); background:#f2f4f9; }
+.badge.on::before{ animation:pulse 1.6s infinite; }
+@keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.22} }
+.remain{ text-align:right; }
+.remain .k{ font-size:10.5px; color:var(--sub); font-weight:600; }
+.remain .v{
+  font-size:19px; font-weight:800; font-variant-numeric:tabular-nums;
+  color:var(--primary); line-height:1.25; margin-top:1px;
+}
+.remain .s{ font-size:10.5px; color:var(--sub); margin-top:2px; }
+
+/* ---------- 今日已赚（主卡） ---------- */
+.hero{
+  background:linear-gradient(150deg,#f7faff 0%,#eef3ff 100%);
+  border-color:#e2e9ff; text-align:center; padding:19px 16px 17px;
+}
+.hero .v{
+  font-size:38px; font-weight:800; line-height:1.1; letter-spacing:.3px;
+  font-variant-numeric:tabular-nums; color:var(--primary); margin:7px 0 5px;
+}
+.hero .u{ font-size:11.5px; color:var(--sub); }
+
+/* ---------- 数据小卡（2×2） ---------- */
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.mini{ padding:14px 14px; }
+.mini .v{
+  font-size:19px; font-weight:800; font-variant-numeric:tabular-nums;
+  margin-top:6px; line-height:1.2; word-break:break-all;
+}
+.mini .v small{ font-size:11px; color:var(--sub); font-weight:600; margin-left:2px; }
+.mini .u{ font-size:10px; color:var(--sub); margin-top:4px; }
+
+/* ---------- 作息条 ---------- */
+.sched{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding:13px 10px; }
+.sched .it{ text-align:center; min-width:0; }
+.sched .it .k{ font-size:10px; color:var(--sub); font-weight:600; display:block; }
+.sched .it .v{
+  font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums;
+  margin-top:4px; display:block; white-space:nowrap;
+}
+.sched .it .v.blue{ color:var(--primary); }
+.sched .it .v.amber{ color:var(--amber); }
+
+/* ---------- 鼓励语 ---------- */
+.praise{
+  background:linear-gradient(135deg,#eef3ff 0%,#f8f3ff 100%);
+  border-color:#e2e9ff;
+  display:flex; align-items:center; gap:11px;
+}
+.praise .ico{
+  width:34px; height:34px; border-radius:11px; flex:0 0 auto;
+  background:#fff; display:flex; align-items:center; justify-content:center;
+  font-size:17px; box-shadow:0 3px 10px rgba(79,124,255,.14);
+}
+.praise .txt{ flex:1 1 auto; min-width:0; }
+.praise .main{ font-size:13.5px; font-weight:800; letter-spacing:.2px; line-height:1.45; }
+.praise .sub{ font-size:11px; color:var(--sub); margin-top:4px; line-height:1.5; }
+
+/* ---------- 计时按钮 ---------- */
+.actions{ display:flex; gap:9px; }
+.btn{
+  font-family:inherit; font-size:13.5px; font-weight:700;
+  padding:14px 16px; border-radius:13px; cursor:pointer;
+  border:1px solid transparent; transition:.16s; flex:1; text-align:center;
+  min-height:48px;
+}
+.btn:active{ transform:scale(.975); }
+.btn-main{ background:var(--primary); color:#fff; box-shadow:0 6px 16px rgba(79,124,255,.28); }
+.btn-main.paused{ background:var(--green); box-shadow:0 6px 16px rgba(31,181,115,.28); }
+.btn-ghost{ background:#fff; color:var(--sub); border-color:var(--line); flex:0 0 auto; padding:14px 18px; }
+.timer-state{ font-size:10.5px; color:var(--sub); text-align:center; margin-top:8px; }
+
+/* ---------- 进度 ---------- */
+.prog-head{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+.prog-head .pct{ font-size:22px; font-weight:800; color:var(--primary); font-variant-numeric:tabular-nums; }
+.bar{ height:10px; border-radius:999px; background:#eef1f7; overflow:hidden; margin:11px 0 9px; }
+.bar-fill{
+  height:100%; width:0%;
+  background:linear-gradient(90deg,#6f9cff,#4f7cff);
+  border-radius:999px; transition:width .28s linear;
+}
+.prog-foot{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:8px; font-size:11.5px; color:var(--sub); flex-wrap:wrap;
+}
+.prog-foot b{ color:var(--txt); font-variant-numeric:tabular-nums; }
+.note{
+  margin-top:10px; font-size:10.5px; color:var(--sub); line-height:1.65;
+  padding-top:10px; border-top:1px dashed var(--line);
+}
+
+/* ---------- PWA 提示 ---------- */
+.pwa-tip{
+  font-size:11px; color:var(--sub); line-height:1.7;
+  background:#fbfcff; border:1px dashed #dbe3f5; border-radius:13px;
+  padding:11px 13px;
+}
+.pwa-tip b{ color:var(--primary); }
+
+/* ---------- 设置弹窗（移动端从底部升起） ---------- */
+.mask{
+  position:fixed; inset:0; background:rgba(24,32,48,.4);
+  backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+  display:none; align-items:flex-end; justify-content:center;
+  z-index:50; padding:0;
+}
+.mask.show{ display:flex; }
+.modal{
+  width:100%; max-width:480px; background:#fff;
+  border-radius:22px 22px 0 0;
+  padding:20px 18px calc(18px + var(--safe-b));
+  box-shadow:0 -12px 44px rgba(20,28,44,.2);
+  max-height:92vh; overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  animation:slideUp .26s cubic-bezier(.22,.9,.3,1);
+}
+@keyframes slideUp{ from{ transform:translateY(100%); } to{ transform:none; } }
+.modal .grab{
+  width:38px; height:4px; border-radius:999px; background:#e2e7f0;
+  margin:0 auto 15px;
+}
+.modal h2{ font-size:17px; font-weight:800; margin-bottom:4px; }
+.modal .desc{ font-size:11.5px; color:var(--sub); margin-bottom:16px; line-height:1.6; }
+.msec{
+  font-size:10.5px; font-weight:800; color:var(--sub); letter-spacing:1px;
+  margin:16px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line);
+}
+.msec:first-of-type{ margin-top:2px; }
+.mrow{ display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+.field{ margin-bottom:12px; }
+.field.full{ grid-column:1/-1; }
+.field label{ display:block; font-size:12px; font-weight:700; color:#48546a; margin-bottom:6px; }
+.field input{
+  width:100%; font-family:inherit; font-size:16px; font-weight:600;
+  padding:12px 13px; border:1px solid var(--line); border-radius:12px;
+  background:#fafbfe; color:var(--txt); transition:.15s;
+  -webkit-appearance:none; appearance:none; min-height:46px;
+}
+.field input:focus{ outline:none; border-color:var(--primary); background:#fff; box-shadow:0 0 0 3px var(--primary-soft); }
+.field .hint{ font-size:10.5px; color:var(--sub); margin-top:5px; line-height:1.5; }
+.calc{
+  background:var(--primary-soft); border-radius:12px; padding:11px 13px;
+  font-size:11.5px; color:#3f5aa6; line-height:1.85; font-weight:600;
+}
+.calc b{ font-variant-numeric:tabular-nums; color:var(--primary); font-size:13px; }
+.modal-foot{ display:flex; gap:10px; margin-top:18px; }
+.modal-foot .btn{ flex:1; }
+
+/* ---------- 独立窗口模式 ---------- */
+@media (display-mode:standalone){
+  body{ padding-top:calc(18px + var(--safe-t)); }
+  .pwa-tip{ display:none; }
+}
+
+/* ---------- 极窄屏微调 ---------- */
+@media (max-width:360px){
+  .hero .v{ font-size:32px; }
+  .status .clock{ font-size:26px; }
+  .mini .v{ font-size:17px; }
+  .sched .it .v{ font-size:11.5px; }
+  .card{ padding:13px 13px; }
+}
+
+/* ---------- 横屏时收窄 ---------- */
+@media (orientation:landscape) and (max-height:520px){
+  .wrap{ max-width:640px; }
+  .hero .v{ font-size:30px; }
+  .status .clock{ font-size:24px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <div class="l">
+      <h1>上班<em>鼓励器</em></h1>
+      <div class="tip">每一秒都在进账</div>
+    </div>
+    <div class="hbtns">
+      <button class="iconbtn inst" id="btnInstall" style="display:none" aria-label="安装到桌面">⬇</button>
+      <button class="iconbtn" id="btnOpen" aria-label="设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 日期时间 + 状态 -->
+  <div class="card status">
+    <div class="r1">
+      <div>
+        <div class="date" id="dateText">—</div>
+        <div class="week" id="weekText">—</div>
+      </div>
+      <div class="clock" id="clockText">00:00:00</div>
+    </div>
+    <div class="r2">
+      <span class="badge off" id="statusBadge">—</span>
+      <div class="remain">
+        <div class="k">距下班还有</div>
+        <div class="v" id="remainText">00:00:00</div>
+        <div class="s" id="remainSub">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 今日已赚（主卡） -->
+  <div class="card hero">
+    <div class="card-label">今日已赚</div>
+    <div class="v" id="earnedText">¥ 0.0000</div>
+    <div class="u">按秒累加 · 保留 4 位小数</div>
+  </div>
+
+  <!-- 速度 / 时薪 / 满勤 / 本月 -->
+  <div class="grid2">
+    <div class="card mini">
+      <div class="card-label">赚钱速度</div>
+      <div class="v" id="rateText">0.0000 <small>元/秒</small></div>
+      <div class="u" id="hourPayText">时薪 ¥ 0.0000</div>
+    </div>
+    <div class="card mini">
+      <div class="card-label">今日满勤可得</div>
+      <div class="v" id="fullPayText">¥ 0.0000</div>
+      <div class="u" id="salarySub">—</div>
+    </div>
+  </div>
+
+  <!-- 作息 -->
+  <div class="card sched">
+    <div class="it"><span class="k">上班</span><span class="v blue" id="sStart">09:00</span></div>
+    <div class="it"><span class="k">午休</span><span class="v amber" id="sLunch">12-13</span></div>
+    <div class="it"><span class="k">下班</span><span class="v blue" id="sEnd">18:00</span></div>
+    <div class="it"><span class="k">净工时</span><span class="v" id="sWork">8.00h</span></div>
+  </div>
+
+  <!-- 鼓励语 -->
+  <div class="card praise">
+    <div class="ico">💪</div>
+    <div class="txt">
+      <div class="main" id="encourage">正在计算…</div>
+      <div class="sub" id="encourageSub"></div>
+    </div>
+  </div>
+
+  <!-- 计时按钮 -->
+  <div>
+    <div class="actions">
+      <button class="btn btn-main" id="btnToggle">关闭计时器</button>
+      <button class="btn btn-ghost" id="btnReset">重置</button>
+    </div>
+    <div class="timer-state" id="timerState">计时进行中</div>
+  </div>
+
+  <!-- 进度 -->
+  <div class="card">
+    <div class="prog-head">
+      <div class="card-label">今日工时进度</div>
+      <div class="pct" id="pctText">0.00%</div>
+    </div>
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+    <div class="prog-foot">
+      <span id="hoursText">已工作 0.00 / 净工作 8.00 小时</span>
+      <span id="progRight">距下班 00:00:00</span>
+    </div>
+  </div>
+
+  <!-- 本月累计 -->
+  <div class="card">
+    <div class="card-label">本月累计</div>
+    <div class="mini" style="padding:0;margin-top:8px">
+      <div class="v" id="monthText" style="font-size:26px">¥ 0.0000</div>
+    </div>
+    <div class="note"><span id="monthNote">—</span></div>
+  </div>
+
+  <!-- 本月已过天数 -->
+  <div class="card">
+    <div class="card-label">本月已过天数</div>
+    <div class="mini" style="padding:0;margin-top:8px">
+      <div class="v" id="daysText" style="font-size:26px">0 <small>天</small></div>
+    </div>
+    <div class="note">日薪 = 月薪 ÷ 每月计薪天数 ｜ 已过天数按满勤折算，不计亏损</div>
+  </div>
+
+  <div class="pwa-tip" id="pwaTip">
+    <b>加到手机桌面：</b>Safari 点底部「分享」→「添加到主屏幕」；Chrome 点右上角 ⋮ →「添加到主屏幕」。
+    之后从桌面图标打开就是全屏 App，没有地址栏。
+  </div>
+
+</div>
+
+<!-- 设置（底部弹出） -->
+<div class="mask" id="mask">
+  <div class="modal">
+    <div class="grab"></div>
+    <h2>设置</h2>
+    <div class="desc">数据保存在本机，刷新或重开都不会丢失</div>
+
+    <div class="msec">薪 资</div>
+    <div class="mrow">
+      <div class="field">
+        <label>月薪（元）</label>
+        <input type="number" id="inSalary" min="0" step="100" inputmode="decimal" placeholder="10000">
+      </div>
+      <div class="field">
+        <label>每月计薪天数</label>
+        <input type="number" id="inDays" min="1" max="31" step="0.25" inputmode="decimal" placeholder="21.75">
+        <div class="hint">默认 21.75，也可填 22 / 26</div>
+      </div>
+    </div>
+
+    <div class="msec">作 息 时 间</div>
+    <div class="mrow">
+      <div class="field">
+        <label>上班时间</label>
+        <input type="time" id="inStart" step="60">
+      </div>
+      <div class="field">
+        <label>下班时间</label>
+        <input type="time" id="inEnd" step="60">
+      </div>
+      <div class="field">
+        <label>午休开始</label>
+        <input type="time" id="inLunchStart" step="60">
+      </div>
+      <div class="field">
+        <label>午休结束</label>
+        <input type="time" id="inLunchEnd" step="60">
+        <div class="hint">不需要午休就填成一样</div>
+      </div>
+    </div>
+
+    <div class="field full">
+      <div class="calc" id="calcPreview">—</div>
+    </div>
+
+    <div class="msec">鼓 励 语</div>
+    <div class="field full">
+      <label>一件 T 恤参考价（元）</label>
+      <input type="number" id="inTshirt" min="1" step="1" inputmode="decimal" placeholder="99">
+      <div class="hint">可改成任何你想买的东西的价格</div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="btnCancel">取消</button>
+      <button class="btn btn-main" id="btnSave">保存设置</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var CFG_KEY = 'workEncourager.config.v2';
+  var ST_KEY  = 'workEncourager.timer.v2';
+  var WEEK = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+  var DEFAULTS = {
+    monthlySalary: 10000, salaryDays: 21.75,
+    startTime: '09:00', lunchStart: '12:00', lunchEnd: '13:00', endTime: '18:00',
+    tshirtPrice: 99
+  };
+
+  /* ---------- 工具 ---------- */
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  function num(v, d){ var n = parseFloat(v); return isFinite(n) ? n : d; }
+  function el(id){ return document.getElementById(id); }
+  function fmt4(n){
+    if (!isFinite(n)) return '0.0000';
+    return n.toLocaleString('zh-CN', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  }
+  function fmtClock(sec){
+    sec = Math.max(0, Math.floor(sec));
+    return pad(Math.floor(sec/3600)) + ':' + pad(Math.floor((sec%3600)/60)) + ':' + pad(sec%60);
+  }
+  function fmtHM(sec){
+    sec = Math.max(0, sec);
+    var h = Math.floor(sec/3600), m = Math.round((sec%3600)/60);
+    if (m >= 60) { h += 1; m = 0; }
+    return h + ' 小时 ' + m + ' 分';
+  }
+  function isHHMM(s){ return /^\d{1,2}:\d{2}$/.test(String(s || '')); }
+  function hhmm2min(s){
+    var p = String(s).split(':');
+    return (parseInt(p[0],10)||0)*60 + (parseInt(p[1],10)||0);
+  }
+  function dayKey(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+  function mkTime(hhmm, base){
+    var p = String(hhmm).split(':');
+    return new Date(base.getFullYear(), base.getMonth(), base.getDate(),
+                    parseInt(p[0],10)||0, parseInt(p[1],10)||0, 0, 0);
+  }
+
+  /* ---------- 配置 ---------- */
+  function loadConfig(){
+    try {
+      var raw = localStorage.getItem(CFG_KEY);
+      if (raw) {
+        var o = JSON.parse(raw) || {};
+        return {
+          monthlySalary: Math.max(0, num(o.monthlySalary, DEFAULTS.monthlySalary)),
+          salaryDays: Math.min(31, Math.max(1, num(o.salaryDays, DEFAULTS.salaryDays))),
+          startTime:  isHHMM(o.startTime)  ? o.startTime  : DEFAULTS.startTime,
+          lunchStart: isHHMM(o.lunchStart) ? o.lunchStart : DEFAULTS.lunchStart,
+          lunchEnd:   isHHMM(o.lunchEnd)   ? o.lunchEnd   : DEFAULTS.lunchEnd,
+          endTime:    isHHMM(o.endTime)    ? o.endTime    : DEFAULTS.endTime,
+          tshirtPrice: Math.max(1, num(o.tshirtPrice, DEFAULTS.tshirtPrice))
+        };
+      }
+    } catch (e) {}
+    return Object.assign({}, DEFAULTS);
+  }
+  function saveConfig(){
+    try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch (e) {}
+  }
+
+  /* ---------- 计时器 ---------- */
+  function loadTimer(){
+    var today = dayKey(new Date());
+    try {
+      var raw = localStorage.getItem(ST_KEY);
+      if (raw) {
+        var o = JSON.parse(raw) || {};
+        if (o.date === today) {
+          return {
+            paused: !!o.paused,
+            pauseAccum: Math.max(0, num(o.pauseAccum, 0)),
+            pauseStartAt: Math.max(0, num(o.pauseStartAt, 0))
+          };
+        }
+      }
+    } catch (e) {}
+    return { paused:false, pauseAccum:0, pauseStartAt:0 };
+  }
+  function saveTimer(){
+    try {
+      localStorage.setItem(ST_KEY, JSON.stringify({
+        date: dayKey(new Date()),
+        paused: paused, pauseAccum: pauseAccum, pauseStartAt: pauseStartAt
+      }));
+    } catch (e) {}
+  }
+
+  var cfg = loadConfig();
+  var t0 = loadTimer();
+  var paused = t0.paused;
+  var pauseAccum = t0.pauseAccum;
+  var pauseStartAt = t0.pauseStartAt;
+
+  /* ---------- 时间轴 ---------- */
+  function buildSchedule(base){
+    var start = mkTime(cfg.startTime, base);
+    var end   = mkTime(cfg.endTime, base);
+    var ls    = mkTime(cfg.lunchStart, base);
+    var le    = mkTime(cfg.lunchEnd, base);
+
+    var hasLunch = (le.getTime() > ls.getTime()) &&
+                   (ls.getTime() >= start.getTime()) &&
+                   (le.getTime() <= end.getTime());
+
+    var segs = [];
+    if (hasLunch) {
+      segs.push([start.getTime(), ls.getTime()]);
+      segs.push([le.getTime(), end.getTime()]);
+    } else {
+      segs.push([start.getTime(), end.getTime()]);
+    }
+    var totalMs = 0;
+    for (var i = 0; i < segs.length; i++) totalMs += (segs[i][1] - segs[i][0]);
+
+    return { start:start, end:end, ls:ls, le:le, hasLunch:hasLunch, segs:segs, totalMs:Math.max(1,totalMs) };
+  }
+
+  function workedMsAt(t, sch){
+    var acc = 0;
+    for (var i = 0; i < sch.segs.length; i++) {
+      var a = sch.segs[i][0], b = sch.segs[i][1];
+      if (t >= b) acc += (b - a);
+      else if (t > a) acc += (t - a);
+    }
+    return Math.max(0, Math.min(sch.totalMs, acc));
+  }
+
+  /* ---------- 核心计算 ---------- */
+  function compute(){
+    var now = new Date();
+    var sch = buildSchedule(now);
+
+    var acc = pauseAccum;
+    if (paused && pauseStartAt > 0) acc += (Date.now() - pauseStartAt);
+    var effT = Date.now() - acc;
+
+    var workedMs = workedMsAt(effT, sch);
+
+    var dayPay   = cfg.monthlySalary / cfg.salaryDays;
+    var totalSec = sch.totalMs / 1000;
+    var rate     = dayPay / totalSec;
+    var earned   = dayPay * (workedMs / sch.totalMs);
+    var hourPay  = dayPay / (totalSec / 3600);
+
+    var remainMs     = Math.max(0, sch.end.getTime() - now.getTime());
+    var remainWorkMs = Math.max(0, sch.totalMs - workedMs);
+
+    var t = now.getTime(), status;
+    if (t < sch.start.getTime()) status = '未上班';
+    else if (t > sch.end.getTime()) status = '已下班';
+    else if (sch.hasLunch && t >= sch.ls.getTime() && t < sch.le.getTime()) status = '午休中';
+    else status = '上班中';
+
+    var daysPassed = now.getDate() - 1;
+    var monthTotal = daysPassed * dayPay + earned;
+
+    return {
+      now:now, sch:sch, workedMs:workedMs, remainMs:remainMs, remainWorkMs:remainWorkMs,
+      dayPay:dayPay, rate:rate, hourPay:hourPay, earned:earned, status:status,
+      daysPassed:daysPassed, monthTotal:monthTotal,
+      tshirtSec: rate > 0 ? (cfg.tshirtPrice / rate) : Infinity
+    };
+  }
+
+  /* ---------- 渲染 ---------- */
+  function render(){
+    var s = compute();
+    var now = s.now, sch = s.sch;
+
+    el('dateText').textContent = (now.getMonth()+1) + ' 月 ' + now.getDate() + ' 日';
+    el('weekText').textContent = now.getFullYear() + ' · ' + WEEK[now.getDay()];
+    el('clockText').textContent = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+
+    var b = el('statusBadge');
+    b.textContent = s.status;
+    b.className = 'badge ' + (s.status === '上班中' ? 'on' : (s.status === '午休中' ? 'lunch' : 'off'));
+
+    el('remainText').textContent = fmtClock(s.remainMs / 1000);
+    el('remainSub').textContent = (s.status === '已下班')
+      ? '今天已收工'
+      : '还需净工作 ' + fmtHM(s.remainWorkMs / 1000);
+
+    el('earnedText').textContent = '¥ ' + fmt4(s.earned);
+
+    el('rateText').innerHTML = fmt4(s.rate) + ' <small>元/秒</small>';
+    el('hourPayText').textContent = '时薪 ¥ ' + fmt4(s.hourPay);
+
+    el('fullPayText').textContent = '¥ ' + fmt4(s.dayPay);
+    el('salarySub').textContent = '月薪 ¥' + cfg.monthlySalary.toLocaleString('zh-CN') +
+      ' ｜ 计薪 ' + cfg.salaryDays + ' 天';
+
+    el('sStart').textContent = cfg.startTime;
+    el('sEnd').textContent   = cfg.endTime;
+    el('sLunch').textContent = sch.hasLunch
+      ? (cfg.lunchStart.replace(':00','') + '-' + cfg.lunchEnd.replace(':00',''))
+      : '无';
+    el('sWork').textContent  = (sch.totalMs/3600000).toFixed(2) + 'h';
+
+    var ts = s.tshirtSec;
+    if (isFinite(ts) && ts > 0) {
+      var hh = Math.floor(ts/3600);
+      var mm = Math.round((ts%3600)/60);
+      if (mm >= 60) { hh += 1; mm = 0; }
+      el('encourage').textContent = '再过 ' + hh + ' 小时 ' + mm + ' 分，一件T恤就赚回来了';
+    } else {
+      el('encourage').textContent = '把月薪填上，就能算出还要多久赚回一件T恤';
+    }
+
+    var sub = '';
+    if (s.status === '午休中') {
+      sub = '午休中，进度已暂停，好好吃饭 ☕';
+    } else if (s.status === '已下班') {
+      sub = '今天已经收工，明天开工继续赚 💰';
+    } else if (isFinite(ts) && ts > 0) {
+      var rw = s.remainWorkMs / 1000;
+      if (ts <= rw) sub = '今天下班前就能赚到，稳住！';
+      else sub = '今天剩余工作时间还能赚 ¥' + fmt4(s.dayPay * (rw / (sch.totalMs/1000))) + '，差额明天接着赚';
+    }
+    el('encourageSub').textContent = sub;
+
+    var pct = s.workedMs / sch.totalMs * 100;
+    el('pctText').textContent = pct.toFixed(2) + '%';
+    el('barFill').style.width = Math.min(100, pct).toFixed(2) + '%';
+    el('hoursText').textContent = '已工作 ' + (s.workedMs/3600000).toFixed(2) +
+                                  ' / 净工作 ' + (sch.totalMs/3600000).toFixed(2) + ' 小时';
+    el('progRight').textContent = '距下班 ' + fmtClock(s.remainMs/1000);
+
+    el('monthText').textContent = '¥ ' + fmt4(s.monthTotal);
+    el('monthNote').textContent = '已过的 ' + s.daysPassed + ' 天按满勤补算，本月只计已赚，不含亏损';
+    el('daysText').innerHTML = s.daysPassed + ' <small>天</small>';
+
+    document.title = '已赚 ¥' + fmt4(s.earned) + ' · 上班鼓励器';
+  }
+
+  /* ---------- 计时按钮 ---------- */
+  function updateToggle(){
+    var btn = el('btnToggle');
+    btn.textContent = paused ? '开启计时器' : '关闭计时器';
+    btn.classList.toggle('paused', paused);
+    el('timerState').textContent = paused ? '计时已暂停，金额已冻结' : '计时进行中';
+  }
+
+  el('btnToggle').addEventListener('click', function(){
+    if (!paused) { paused = true; pauseStartAt = Date.now(); }
+    else {
+      if (pauseStartAt > 0) { pauseAccum += (Date.now() - pauseStartAt); pauseStartAt = 0; }
+      paused = false;
+    }
+    saveTimer(); updateToggle(); render();
+  });
+
+  el('btnReset').addEventListener('click', function(){
+    paused = false; pauseStartAt = 0; pauseAccum = 0;
+    saveTimer(); updateToggle(); render();
+  });
+
+  /* ---------- 设置 ---------- */
+  function previewCalc(){
+    var sal  = num(el('inSalary').value, cfg.monthlySalary);
+    var days = Math.min(31, Math.max(1, num(el('inDays').value, cfg.salaryDays)));
+    var st   = el('inStart').value || cfg.startTime;
+    var en   = el('inEnd').value || cfg.endTime;
+    var ls   = el('inLunchStart').value || cfg.lunchStart;
+    var le   = el('inLunchEnd').value || cfg.lunchEnd;
+
+    var sm = hhmm2min(st), em = hhmm2min(en);
+    var lsm = hhmm2min(ls), lem = hhmm2min(le);
+    var span = em - sm;
+    var lunch = (lem > lsm) ? (lem - lsm) : 0;
+
+    if (span <= 0) { el('calcPreview').innerHTML = '⚠️ 下班时间需晚于上班时间'; return; }
+    if (lunch >= span) { el('calcPreview').innerHTML = '⚠️ 午休时间过长，已超过上下班跨度'; return; }
+
+    var workH  = (span - lunch) / 60;
+    var dayPay = sal / days;
+    var hp = workH > 0 ? dayPay / workH : 0;
+    var rt = workH > 0 ? dayPay / (workH * 3600) : 0;
+
+    el('calcPreview').innerHTML =
+      '日薪 <b>¥' + fmt4(dayPay) + '</b>（月薪 ÷ ' + days + ' 天）<br>' +
+      '净工作时长 <b>' + workH.toFixed(2) + ' 小时</b>' +
+      (lunch > 0 ? '（含午休 ' + (lunch/60).toFixed(2) + 'h）' : '（无午休）') + '<br>' +
+      '时薪 <b>¥' + fmt4(hp) + '</b>　｜　速度 <b>' + fmt4(rt) + ' 元/秒</b>';
+  }
+
+  function openSettings(){
+    el('inSalary').value     = cfg.monthlySalary;
+    el('inDays').value       = cfg.salaryDays;
+    el('inStart').value      = cfg.startTime;
+    el('inEnd').value        = cfg.endTime;
+    el('inLunchStart').value = cfg.lunchStart;
+    el('inLunchEnd').value   = cfg.lunchEnd;
+    el('inTshirt').value     = cfg.tshirtPrice;
+    previewCalc();
+    el('mask').classList.add('show');
+  }
+
+  el('btnOpen').addEventListener('click', openSettings);
+  el('btnInstall').addEventListener('click', function(){ /* 见下方 beforeinstallprompt 绑定 */ });
+  el('btnCancel').addEventListener('click', function(){ el('mask').classList.remove('show'); });
+  el('mask').addEventListener('click', function(e){
+    if (e.target === el('mask')) el('mask').classList.remove('show');
+  });
+
+  ['inSalary','inDays','inStart','inEnd','inLunchStart','inLunchEnd'].forEach(function(id){
+    el(id).addEventListener('input', previewCalc);
+    el(id).addEventListener('change', previewCalc);
+  });
+
+  el('btnSave').addEventListener('click', function(){
+    var sal  = parseFloat(el('inSalary').value);
+    var days = parseFloat(el('inDays').value);
+    var st   = el('inStart').value;
+    var en   = el('inEnd').value;
+    var ls   = el('inLunchStart').value;
+    var le   = el('inLunchEnd').value;
+    var tp   = parseFloat(el('inTshirt').value);
+
+    if (!isFinite(sal) || sal < 0) { alert('请输入正确的月薪（≥ 0）'); return; }
+    if (!isFinite(days) || days <= 0 || days > 31) { alert('每月计薪天数需在 1 ~ 31 之间'); return; }
+    if (!isHHMM(st) || !isHHMM(en) || !isHHMM(ls) || !isHHMM(le)) { alert('请把作息时间填写完整'); return; }
+    if (hhmm2min(en) <= hhmm2min(st)) { alert('下班时间需晚于上班时间'); return; }
+
+    var lsm = hhmm2min(ls), lem = hhmm2min(le);
+    if (lem > lsm && (lsm < hhmm2min(st) || lem > hhmm2min(en))) {
+      alert('午休时间需落在上班与下班之间'); return;
+    }
+    if (!isFinite(tp) || tp <= 0) tp = DEFAULTS.tshirtPrice;
+
+    cfg = { monthlySalary:sal, salaryDays:days, startTime:st,
+            lunchStart:ls, lunchEnd:le, endTime:en, tshirtPrice:tp };
+    saveConfig();
+    el('mask').classList.remove('show');
+    render();
+  });
+
+  /* ---------- PWA：图标 + manifest ---------- */
+  function roundRect(ctx, x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function makeIcon(size){
+    var c = document.createElement('canvas');
+    c.width = c.height = size;
+    var ctx = c.getContext('2d');
+    var g = ctx.createLinearGradient(0, 0, size, size);
+    g.addColorStop(0, '#6f9cff');
+    g.addColorStop(1, '#4f7cff');
+    ctx.fillStyle = g;
+    roundRect(ctx, 0, 0, size, size, size * 0.22);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold ' + Math.round(size * 0.52) + 'px -apple-system,"PingFang SC",sans-serif';
+    ctx.fillText('¥', size / 2, size * 0.54);
+    return c.toDataURL('image/png');
+  }
+
+  (function setupPWA(){
+    var icon192 = makeIcon(192);
+    var icon512 = makeIcon(512);
+    // 手机上主屏图标需要留白，用 maskable 版本
+    var icon512m = makeIcon(410);
+
+    var manifest = {
+      name: '上班鼓励器',
+      short_name: '上班鼓励器',
+      description: '实时计算上班期间的赚钱进度',
+      start_url: '.',
+      scope: '.',
+      display: 'standalone',
+      orientation: 'portrait',
+      background_color: '#f4f6fb',
+      theme_color: '#4f7cff',
+      lang: 'zh-CN',
+      icons: [
+        { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: icon512m, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+      ]
+    };
+
+    var link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+    document.head.appendChild(link);
+
+    var apple = document.createElement('link');
+    apple.rel = 'apple-touch-icon';
+    apple.href = icon192;
+    document.head.appendChild(apple);
+
+    var appleStart = document.createElement('meta');
+    appleStart.name = 'apple-mobile-web-app-capable';
+    appleStart.content = 'yes';
+    document.head.appendChild(appleStart);
+
+    var fav = document.createElement('link');
+    fav.rel = 'icon';
+    fav.type = 'image/png';
+    fav.href = icon192;
+    document.head.appendChild(fav);
+
+    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+      window.addEventListener('load', function(){
+        navigator.serviceWorker.register('sw.js').catch(function(){});
+      });
+    }
+  })();
+
+  /* ---------- 安装按钮 ---------- */
+  var deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    var btn = el('btnInstall');
+    if (btn) btn.style.display = '';
+  });
+
+  el('btnInstall').addEventListener('click', function(){
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(){
+        deferredPrompt = null;
+        el('btnInstall').style.display = 'none';
+      });
+    } else {
+      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      alert(isIOS
+        ? 'iPhone 请这样添加：\n\n1. 用 Safari 打开本页\n2. 点底部「分享」按钮 ⬆\n3. 选择「添加到主屏幕」\n4. 点「添加」'
+        : '请用浏览器菜单添加：\n\n• Chrome：右上角 ⋮ →「添加到主屏幕」\n• Edge：右下角 ⋯ →「添加到手机」');
+    }
+  });
+
+  /* ---------- 防止双击缩放 ---------- */
+  var lastTouch = 0;
+  document.addEventListener('touchend', function(e){
+    var now = Date.now();
+    if (now - lastTouch <= 300) e.preventDefault();
+    lastTouch = now;
+  }, { passive: false });
+
+  /* ---------- 启动 ---------- */
+  updateToggle();
+  render();
+  setInterval(render, 100);
+
+  document.addEventListener('visibilitychange', function(){
+    if (!document.hidden) render();
+  });
+
+})();
+</script>
+</body>
+</html>
